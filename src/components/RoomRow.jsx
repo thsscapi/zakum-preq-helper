@@ -1,9 +1,5 @@
-// src/components/RoomRow.jsx
-
 const GRID_COLS = "110px 140px 140px 120px 140px 1fr 80px";
 const ICON_SIZE = 36;
-
-// Put this file in /public
 const CHEST_SKIP_ICON = "/chest_skip.png";
 
 function Badge({ label, variant = "neutral", title }) {
@@ -47,19 +43,14 @@ function Badge({ label, variant = "neutral", title }) {
 }
 
 function docIconSrc(roomId, doc) {
-  // doc: { type: "rock"|"chest"|"rock_or_chest", icon?: string }
   if (doc?.icon) return doc.icon;
-
-  // Special rule: the *document chest* in 16-5 should stand out so you remember to skip it
   if (roomId === "16-5" && doc?.type === "chest") return CHEST_SKIP_ICON;
-
   if (doc?.type === "rock") return "/rock.png";
   if (doc?.type === "chest") return "/chest.png";
-  return null; // rock_or_chest handled separately
+  return null;
 }
 
 function keyIconSrc(room) {
-  // room.key: { type: "rock"|"chest" }
   if (!room?.key) return null;
   return room.key.type === "rock" ? "/rock.png" : "/chest.png";
 }
@@ -72,6 +63,8 @@ export default function RoomRow({
   isOptional,
   isSkipped,
   onToggleSkip,
+  playerFocus,
+  owner,
 }) {
   const docsState = event?.docs ?? room.docs.map(() => false);
   const keyState = event?.key ?? false;
@@ -99,12 +92,21 @@ export default function RoomRow({
   }
 
   const canSkip = !room.key && room.docs.length > 0 && !room.onPath;
-  const rowBg = isNext ? "rgba(255, 200, 80, 0.18)" : "transparent";
   const isMain = room.id === "MAIN";
+
+  const isDimmed = playerFocus && owner !== playerFocus;
+  const teamTint =
+    playerFocus === "A" && owner === "A"
+      ? "rgba(255, 80, 80, 0.16)"
+      : playerFocus === "B" && owner === "B"
+      ? "rgba(80, 140, 255, 0.16)"
+      : "transparent";
+
+  const nextTint = isNext ? "rgba(255, 200, 80, 0.18)" : "transparent";
+  const rowBg = teamTint !== "transparent" ? teamTint : nextTint;
 
   function renderDocSlot(doc, checked, onChange) {
     if (doc.type === "rock_or_chest") {
-      // No dedicated icon: show rock/chest together
       return (
         <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
@@ -135,15 +137,15 @@ export default function RoomRow({
         padding: "10px 0",
         borderBottom: "1px solid var(--border)",
         background: rowBg,
+        opacity: isDimmed ? 0.45 : 1,
       }}
     >
-      {/* 1) MAP — optical right alignment */}
       <div
         style={{
           fontWeight: 800,
           textAlign: "right",
           paddingRight: 22,
-          color: "var(--text)",
+          color: isDimmed ? "var(--muted)" : "var(--text)",
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
@@ -153,37 +155,35 @@ export default function RoomRow({
         <span>{room.id}</span>
       </div>
 
-      {/* 2-3) DOCS */}
       {isMain ? (
-        <>
-          {/* Merge docs col 2+3 visually by spanning */}
-          <div
-            style={{
-              gridColumn: "2 / span 2",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-              paddingTop: 2,
-            }}
-          >
-            {/* show rock+chest once */}
-            <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-              <img src="/rock.png" width={ICON_SIZE} height="auto" alt="rock" />
-              <img src="/chest.png" width={ICON_SIZE} height="auto" alt="chest" />
-            </span>
+        <div
+          style={{
+            gridColumn: "2 / span 2",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            paddingTop: 2,
+          }}
+        >
+          <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+            <img src="/rock.png" width={ICON_SIZE} height="auto" alt="rock" />
+            <img src="/chest.png" width={ICON_SIZE} height="auto" alt="chest" />
+          </span>
 
-            {/* 3 checkboxes */}
-            <span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}>
-              {[0, 1, 2].map((i) => (
-                <label key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <input type="checkbox" checked={docsState[i] || false} onChange={() => toggleDoc(i)} />
-                  <span style={{ fontSize: 14, opacity: 0.85 }}>{i + 1}</span>
-                </label>
-              ))}
-            </span>
-          </div>
-        </>
+          <span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}>
+            {[0, 1, 2].map((i) => (
+              <label key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="checkbox"
+                  checked={docsState[i] || false}
+                  onChange={() => toggleDoc(i)}
+                />
+                <span style={{ fontSize: 14, opacity: 0.85 }}>{i + 1}</span>
+              </label>
+            ))}
+          </span>
+        </div>
       ) : (
         <>
           <div>
@@ -202,7 +202,6 @@ export default function RoomRow({
         </>
       )}
 
-      {/* 4) KEY */}
       <div>
         {room.key ? (
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -214,7 +213,6 @@ export default function RoomRow({
         )}
       </div>
 
-      {/* 5) STATUS (includes permanent badges from rooms.js) */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {Array.isArray(room.badges) &&
           room.badges.map((b, idx) => (
@@ -232,24 +230,26 @@ export default function RoomRow({
         {isSkipped && <Badge label="Skipped" variant="danger" />}
       </div>
 
-      {/* 6) PORTAL */}
       <div
         style={{
           fontSize: 18,
           opacity: 0.95,
           whiteSpace: "pre-line",
-          color: "var(--text)",
+          color: isDimmed ? "var(--muted)" : "var(--text)",
         }}
       >
         {room.portal || <span style={{ opacity: 0.4, color: "var(--muted)" }}>—</span>}
       </div>
 
-      {/* 7) SKIP */}
       <div style={{ opacity: canSkip ? 1 : 0.35 }}>
         {canSkip ? (
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 18 }}>❌</span>
-            <input type="checkbox" checked={isSkipped} onChange={() => onToggleSkip(room.id)} />
+            <input
+              type="checkbox"
+              checked={isSkipped}
+              onChange={() => onToggleSkip(room.id)}
+            />
           </label>
         ) : (
           <span style={{ opacity: 0.4, color: "var(--muted)" }}>—</span>

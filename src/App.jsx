@@ -10,10 +10,53 @@ const SHOW_DEBUG = false;
 
 const GRID_COLS = "110px 140px 140px 120px 140px 1fr 80px";
 
+// Your preferred 2-player split
+const PLAYER_A_ROOMS = new Set([
+  "9-1",
+  "9-2",
+  "11-1",
+  "12-1",
+  "1-1",
+  "1-2",
+  "7-1",
+  "7-2",
+  "16-2",
+  "16-3",
+  "8-1",
+  "8-2",
+  "13-1",
+  "14-1",
+  "15-1",
+]);
+
+const PLAYER_B_ROOMS = new Set([
+  "MAIN",
+  "2-1",
+  "3-1",
+  "3-2",
+  "4-1",
+  "4-2",
+  "5-1",
+  "6-1",
+  "10-1",
+  "10-2",
+  "16-1",
+  "16-4",
+  "16-6",
+  "16-5",
+]);
+
+function getRoomOwner(roomId) {
+  if (PLAYER_A_ROOMS.has(roomId)) return "A";
+  if (PLAYER_B_ROOMS.has(roomId)) return "B";
+  return null;
+}
+
 function App() {
   const [events, setEvents] = useState([]);
   const [skippedRooms, setSkippedRooms] = useState([]);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [playerFocus, setPlayerFocus] = useState(null); // null | "A" | "B"
 
   const roomRefs = useRef({});
 
@@ -88,6 +131,7 @@ function App() {
   function resetAll() {
     setEvents([]);
     setSkippedRooms([]);
+    setPlayerFocus(null);
     localStorage.removeItem(EVENTS_KEY);
     localStorage.removeItem(SKIP_KEY);
   }
@@ -175,13 +219,23 @@ function App() {
 
   return (
     <div style={{ padding: 16, maxWidth: 1200, color: "var(--text)" }}>
-      <h1 style={{ marginBottom: 8, textAlign: "center" }}>Sparrow's Zakum Prequest Helper</h1>
+      <h1 style={{ marginBottom: 8, textAlign: "center" }}>
+        Sparrow&apos;s Zakum Prequest Helper
+      </h1>
 
-      <div style={{ marginBottom: 10, fontSize: 13, opacity: 0.9, color: "var(--muted)" }}>
-        This is a checklist tool to obtain all 30 Paper Documents in Zakum Prequest Stage 1. Completing this optional challenge rewards all participants with 5 Return Scrolls to Dead Mine, which teleports players to Dead Mine I from anywhere in the Ossyria region (Orbis + El Nath). They are very useful for Bishops providing Mystic Door to Zakum's Altar.
+      <div
+        style={{
+          marginBottom: 10,
+          fontSize: 13,
+          opacity: 0.9,
+          color: "var(--muted)",
+        }}
+      >
+        This is a checklist tool to obtain all 30 Paper Documents in Zakum
+        Prequest Stage 1. Completing this optional challenge rewards all
+        participants with 5 Return Scrolls to Dead Mine.
       </div>
 
-      {/* Legend + Maps + Reset in ONE ROW (wraps nicely on small screens) */}
       <div
         style={{
           display: "flex",
@@ -191,7 +245,6 @@ function App() {
           marginBottom: 10,
         }}
       >
-        {/* Legend */}
         <div
           style={{
             flex: "1 1 100px",
@@ -203,12 +256,22 @@ function App() {
             background: "var(--panel)",
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "flex-start",
+              flexDirection: "column",
+            }}
+          >
             <span>
-              <img src="/rock.png" width="18" style={{ verticalAlign: "middle" }} /> Inside Rock
+              <img src="/rock.png" width="18" style={{ verticalAlign: "middle" }} /> Inside
+              Rock
             </span>
             <span>
-              <img src="/chest.png" width="18" style={{ verticalAlign: "middle" }} /> Inside Chest
+              <img src="/chest.png" width="18" style={{ verticalAlign: "middle" }} /> Inside
+              Chest
             </span>
             <span>⏪ Warp to Entrance</span>
             <span>⏫ Re-Enter to Main</span>
@@ -218,7 +281,6 @@ function App() {
           </div>
         </div>
 
-        {/* Maps (side-by-side) */}
         <div
           style={{
             flex: "1 1 580px",
@@ -255,15 +317,27 @@ function App() {
           </div>
         </div>
 
-        {/* Reset */}
         <div style={{ flex: "0 0 50px", display: "flex" }}>
-          <button onClick={resetAll} title="Reset All" style={{ height: "100%", fontSize: "25px", padding: "0" }}>
+          <button
+            onClick={resetAll}
+            title="Reset All"
+            style={{
+              height: "100%",
+              fontSize: "25px",
+              padding: 0,
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "var(--panel)",
+              color: "var(--text)",
+              minWidth: 50,
+              cursor: "pointer",
+            }}
+          >
             🔄
           </button>
         </div>
       </div>
 
-      {/* List with sticky header + sticky footer */}
       <div
         style={{
           border: "1px solid var(--border)",
@@ -273,7 +347,6 @@ function App() {
         }}
       >
         <div style={{ maxHeight: 560, overflowY: "auto" }}>
-          {/* Sticky Header Row */}
           <div
             style={{
               position: "sticky",
@@ -291,7 +364,6 @@ function App() {
           >
             <div style={{ textAlign: "right", paddingRight: 22 }}>Map</div>
 
-            {/* MERGED Docs header spans columns 2 + 3 */}
             <div
               style={{
                 gridColumn: "2 / span 2",
@@ -300,20 +372,11 @@ function App() {
                 alignItems: "center",
               }}
             >
-              <img
-                alt="doc"
-                src="/document.png"
-                style={{ height: 22, verticalAlign: "middle" }}
-              />
+              <img alt="doc" src="/document.png" style={{ height: 22 }} />
             </div>
 
-            {/* Key header placed at col 4 */}
             <div style={{ gridColumn: 4, display: "flex", justifyContent: "center" }}>
-              <img
-                alt="key"
-                src="/key.png"
-                style={{ height: 22, verticalAlign: "middle" }}
-              />
+              <img alt="key" src="/key.png" style={{ height: 22 }} />
             </div>
 
             <div style={{ gridColumn: 5 }}>Status</div>
@@ -321,13 +384,13 @@ function App() {
             <div style={{ gridColumn: 7 }}>Skip</div>
           </div>
 
-          {/* Rows */}
           <div style={{ padding: "0 10px" }}>
             {ROOMS.map((room) => {
               const event = getRoomEvent(room.id);
               const isNext = nextTargetRoom?.id === room.id;
               const optional = isRoomOptional(room, docsRemainingNeeded);
               const skipped = skippedRooms.includes(room.id);
+              const owner = getRoomOwner(room.id);
 
               return (
                 <div
@@ -350,13 +413,14 @@ function App() {
                           : [...prev, roomId]
                       );
                     }}
+                    playerFocus={playerFocus}
+                    owner={owner}
                   />
                 </div>
               );
             })}
           </div>
 
-          {/* Sticky Footer Row */}
           <div
             style={{
               position: "sticky",
@@ -376,7 +440,6 @@ function App() {
               Total
             </div>
 
-            {/* MERGED Docs footer spans columns 2 + 3 with icons */}
             <div
               style={{
                 gridColumn: "2 / span 2",
@@ -385,18 +448,13 @@ function App() {
                 gap: 8,
               }}
             >
-              <img src="/document.png" alt="document" style={{ height: 18, width: "auto" }} />
-              <span style={{ color: "var(--text)" }}>
-                {docsCollected}/{DOCS_NEEDED}
-              </span>
+              <img src="/document.png" alt="document" style={{ height: 18 }} />
+              <span style={{ color: "var(--text)" }}>{docsCollected}/{DOCS_NEEDED}</span>
             </div>
 
-            {/* Keys footer stays in col 4 */}
             <div style={{ gridColumn: 4, color: "var(--text)", display: "flex", gap: 8 }}>
-              <img src="/chest.png" alt="chest" style={{ height: 18, width: "auto" }} />
-              <span style={{ color: "var(--text)" }}>
-                {keysCollected}/7
-              </span>
+              <img src="/chest.png" alt="chest" style={{ height: 18 }} />
+              <span>{keysCollected}/7</span>
             </div>
 
             <div style={{ gridColumn: 5 }} />
@@ -406,16 +464,105 @@ function App() {
         </div>
       </div>
 
-      <div style={{ marginTop: 6, marginBottom: 10, fontSize: 13, opacity: 0.9, color: "var(--muted)" }}>
-        Developer's Note to Self: If you notice a room is basically unavoidable, add <code>onPath: true</code>{" "}
-        to that room in <code>rooms.js</code>.<br/> 
-        Also, check if any rooms has maximum of only 1 or 2 Rocks, such as in 7-2.
+      <div
+        style={{
+          marginTop: 6,
+          marginBottom: 10,
+          fontSize: 13,
+          opacity: 0.9,
+          color: "var(--muted)",
+        }}
+      >
+        Developer&apos;s Note to Self: If you notice a room is basically unavoidable,
+        add <code>onPath: true</code> to that room in <code>rooms.js</code>.
       </div>
 
-      {/* Teleport buttons lower down */}
-      <div style={{ marginTop: 16, marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button onClick={addTeleport}>Teleported to Main</button>
-        <button onClick={undoLastTeleport}>Undo Last Teleport</button>
+      <div
+        style={{
+          marginTop: 16,
+          marginBottom: 10,
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <button
+          onClick={addTeleport}
+          style={{
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            background: "var(--panel)",
+            color: "var(--text)",
+            padding: "8px 12px",
+            cursor: "pointer",
+          }}
+        >
+          Teleported to Main
+        </button>
+
+        <button
+          onClick={undoLastTeleport}
+          style={{
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            background: "var(--panel)",
+            color: "var(--text)",
+            padding: "8px 12px",
+            cursor: "pointer",
+          }}
+        >
+          Undo Last Teleport
+        </button>
+
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setPlayerFocus("A")}
+            style={{
+              borderRadius: 8,
+              border: "1px solid rgba(255, 80, 80, 0.55)",
+              background:
+                playerFocus === "A" ? "rgba(255, 80, 80, 0.30)" : "rgba(255, 80, 80, 0.16)",
+              color: "var(--text)",
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Player A
+          </button>
+
+          <button
+            onClick={() => setPlayerFocus("B")}
+            style={{
+              borderRadius: 8,
+              border: "1px solid rgba(80, 140, 255, 0.55)",
+              background:
+                playerFocus === "B" ? "rgba(80, 140, 255, 0.30)" : "rgba(80, 140, 255, 0.16)",
+              color: "var(--text)",
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Player B
+          </button>
+
+          <button
+            onClick={() => setPlayerFocus(null)}
+            style={{
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "var(--panel)",
+              color: "var(--text)",
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       <h2 style={{ margin: "14px 0 8px" }}>Event Log</h2>
@@ -451,7 +598,14 @@ function App() {
                   </div>
                   <button
                     onClick={() => removeTeleportAtIndex(idx)}
-                    style={{ padding: "0.25em 0.6em" }}
+                    style={{
+                      padding: "0.25em 0.6em",
+                      borderRadius: 6,
+                      border: "1px solid var(--border)",
+                      background: "var(--panel-2)",
+                      color: "var(--text)",
+                      cursor: "pointer",
+                    }}
                   >
                     Remove
                   </button>
