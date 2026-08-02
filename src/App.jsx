@@ -57,8 +57,16 @@ function App() {
   const [skippedRooms, setSkippedRooms] = useState([]);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [playerFocus, setPlayerFocus] = useState(null); // null | "A" | "B"
+  const [guestAccess, setGuestAccess] = useState(null);
 
   const roomRefs = useRef({});
+
+  useEffect(() => {
+    fetch("/guest-pin", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setGuestAccess(data))
+      .catch(() => setGuestAccess(null));
+  }, []);
 
   useEffect(() => {
     const savedEvents = localStorage.getItem(EVENTS_KEY);
@@ -235,6 +243,28 @@ function App() {
         Prequest Stage 1. Completing this optional challenge rewards all
         participants with 5 Return Scrolls to Dead Mine.
       </div>
+
+      {guestAccess && (
+        <div className="guest-access-card">
+          <div>
+            <div className="guest-access-label">Owner access · Today&apos;s guest PIN</div>
+            <div className="guest-access-pin" aria-label={`Guest PIN ${guestAccess.pin}`}>
+              {guestAccess.pin}
+            </div>
+          </div>
+          <div className="guest-access-details">
+            <span>
+              Rotates {new Date(guestAccess.rotatesAt).toLocaleString([], {
+                timeZone: "Asia/Singapore",
+                hour: "numeric",
+                minute: "2-digit",
+                timeZoneName: "short",
+              })}
+            </span>
+            <span>Guest access lasts {guestAccess.sessionHours} hours after login.</span>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
