@@ -1,3 +1,18 @@
+# Zakum Prequest Helper
+
+## Private access
+
+Every request is protected by server-side middleware. Configure these environment variables in Vercel for Production and Preview:
+
+- `OWNER_PASSWORD`: the permanent owner password
+- `AUTH_SECRET`: a long random value used to sign login sessions
+
+Owner sessions last 30 days. The owner-only panel shows a six-digit guest PIN that rotates automatically at midnight Singapore time. Guest sessions last 24 hours after login. Changing the owner PIN invalidates existing owner sessions; rotating `AUTH_SECRET` invalidates every session. No PIN or secret is included in the browser bundle or committed to the repository.
+
+After changing an environment variable, redeploy the app so the new value applies.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

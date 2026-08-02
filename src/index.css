@@ -83,3 +83,45 @@ button:focus-visible{
   background: rgba(0,0,0,0.18);
   color: var(--text);
 }
+
+.guest-access-card{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(125, 175, 255, 0.35);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(70, 105, 160, 0.26), rgba(49, 56, 70, 0.9));
+}
+
+.guest-access-label{
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.guest-access-pin{
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+}
+
+.guest-access-details{
+  display: grid;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+@media (max-width: 620px){
+  .guest-access-card{ align-items: flex-start; flex-direction: column; }
+  .guest-access-details{ text-align: left; }
+}
